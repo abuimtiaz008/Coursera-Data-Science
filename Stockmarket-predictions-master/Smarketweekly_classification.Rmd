@@ -1,0 +1,90 @@
+---
+title: "Smarket weekly"
+author: "Abu Imtiaz"
+date: "March 4, 2017"
+output: md_document
+---
+
+```{r}
+library(ISLR)
+attach(Weekly)
+dim(Weekly)
+head(Weekly)
+pairs(Direction~Lag1+Lag2+Lag3+Lag4+Lag5)
+```
+Perform Logistic regression with Direction as the response and the five lag cariables plus Volume as predictors.
+```{r}
+glm.fit<-glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume,data=Weekly,family=binomial)
+summary(glm.fit)
+```
+
+Only lag2 seems to be Statistically significant. Now confusion matrix will be formed.
+```{r}
+glm.probs<-predict(glm.fit,type="response")
+glm.pred=rep("Down",1089)
+glm.pred[glm.probs>0.5]="Up"
+table(glm.pred,Direction)
+mean(glm.pred==Direction)
+```
+
+The prediction error of logictic regression is about 46%.
+
+Now a logistic regression will be fitted using a training data period from 1990 to 2008 with Lag2 as the only predictor. This model will be used to predict Direction for 2009 to 2010 data.
+
+```{r}
+y.train<-Year<2009
+D.train<-Weekly[y.train,]
+head(D.train)
+D.test<-subset(Weekly, Year %in% c(2009,2010))
+head(D.test)
+glm.fit2<-glm(Direction~Lag2,data=D.train,family=binomial)
+glm.probs2<-predict(glm.fit2,D.test,type="response")
+dim(D.test)
+glm.pred2=rep("Down",104)
+glm.pred2[glm.probs2>0.5]="Up"
+table(glm.pred2,D.test$Direction)
+mean(glm.pred2==D.test$Direction)
+```
+
+Now we will use LDA
+
+```{r}
+library(MASS)
+lda.fit<-lda(Direction~Lag2,data=D.train)
+lda.pred<-predict(lda.fit,D.test,type="response")
+names(lda.pred)
+table(lda.pred$class,D.test$Direction)
+mean(lda.pred$class==D.test$Direction)
+```
+
+Now we will use QDA
+```{r}
+qda.fit<-qda(Direction~Lag2,data=D.train)
+qda.pred<-predict(qda.fit,D.test,type="response")
+names(qda.pred)
+table(qda.pred$class,D.test$Direction)
+mean(qda.pred$class==D.test$Direction)
+```
+
+Now we will use KNN
+
+```{r}
+library(class)
+D.Direction=Direction[y.train]
+head(D.Direction,20)
+train.X=as.matrix(Lag2[y.train])
+dim(train.X)
+test.X=as.matrix(Lag2[!y.train])
+dim(test.X)
+set.seed(1)
+knn.pred=knn(train.X,test.X,D.Direction,k=1)
+table(knn.pred,D.test$Direction)
+mean(knn.pred==D.test$Direction)
+```
+
+Therefore, LDA and Logistic regression provide best results on this data
+
+
+
+
+```
