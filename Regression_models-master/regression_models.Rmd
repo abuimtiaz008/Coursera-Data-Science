@@ -1,0 +1,57 @@
+---
+title: "Regression Models Class Project"
+author: "Abu Imtiaz"
+date: "February 21, 2017"
+output: md_document
+---
+
+##Excecutive summary
+1. manual transmission better for MPG
+2. the difference between automatic and manual transmission is 2.16 MPG
+
+### First question
+First regression model will discard all the variables and show the relationship between mpg and am only
+
+```{r first}
+fit1<-lm(mpg~factor(am),mtcars)
+summary(fit1)$coef
+```
+This shows the average mpg of manual transmission cars are higher than that of automatic transmission cars. Now, this will be verified by introducing other variables of the dataset in the model one at a time
+
+```{r second}
+fit2<-lm(mpg~factor(am) + disp,mtcars)
+fit3<-lm(mpg~factor(am) + disp + hp,mtcars)
+fit4<-lm(mpg~factor(am) + disp + hp + wt,mtcars)
+fit5<-lm(mpg~factor(am) + disp + hp + wt + qsec,mtcars)
+fit6<-lm(mpg~factor(am) + disp + hp + wt + qsec + drat,mtcars)
+fit7<-lm(mpg~factor(am) + disp + hp + wt + qsec + drat + factor(cyl) + factor(vs) + factor(gear),mtcars)
+cf <- c(coef(fit1)[1],coef(fit2)[1],coef(fit3)[1],coef(fit4)[1],coef(fit5)[1],coef(fit6)[1],coef(fit7)[1])
+cf2 <- c(coef(fit1)[2],coef(fit2)[2],coef(fit3)[2],coef(fit4)[2],coef(fit5)[2],coef(fit6)[2],coef(fit7)[2])
+cf
+cf2
+```
+
+Based on these coefficients of the multivariable linear models, it is evident that average mpg of manual tranmission is always higher than that of automatic tranmission cars regardless of which variable or variables are kept fixed.**Clearly manual transmission better for MPG based on this dataset**
+
+### Second question
+The average mpg of manual transmission cars compared to that of automatic transmission cars changes with variables in the model as shown in the last section. Now to qunatify the average mpg improvement ANOVA can be used with the models desribed in the last section
+```{r}
+anova(fit1,fit2,fit3,fit4,fit5,fit6,fit7)
+```
+The last three models has low F statistic, therefore, these regressors are not significant. Thus, model 4 (fit4) can be taken as the most suitable model. 
+```{r}
+summary(fit4)
+```
+This model explains 84% of the variance. Based on this model, **the difference between automatic and manual transmissions is 2.16 MPG** 
+
+The residual analyses are shown in the appendix.
+
+### Appendix
+
+```{r}
+library(ggplot2)
+g<-ggplot(mtcars,aes(factor(am),mpg,color=factor(am)))
+g+geom_boxplot()+facet_grid(.~cyl)
+par(mfrow = c(2,2))
+plot(fit4)
+
